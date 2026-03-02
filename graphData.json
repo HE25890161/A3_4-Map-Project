@@ -1,0 +1,19 @@
+{
+    "ID": "myGraph",
+    "Nodes":[
+        {
+            "Value": "abc",
+            "Connections": [],
+            "Weights": [],
+            "RelativePositionX": 0,
+            "RelativePositionY": 0
+        },
+        {
+            "Value": "def",
+            "Connections": [],
+            "Weights": [],
+            "RelativePositionX": 0,
+            "RelativePositionY": 0
+        }
+    ]
+}

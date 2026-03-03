@@ -2,18 +2,26 @@
     "ID": "myGraph",
     "Nodes":[
         {
-            "Value": "abc",
-            "Connections": [],
-            "Weights": [],
-            "RelativePositionX": 0,
-            "RelativePositionY": 0
+            "Value": "a",
+            "Connections": [1,2],
+            "Weights": [0,0],
+            "RelativePositionX": 20,
+            "RelativePositionY": 20
         },
         {
-            "Value": "def",
-            "Connections": [],
-            "Weights": [],
-            "RelativePositionX": 0,
-            "RelativePositionY": 0
+            "Value": "b",
+            "Connections": [0,2],
+            "Weights": [0,0],
+            "RelativePositionX": 60,
+            "RelativePositionY": 20
+        },
+        {
+            "Value": "c",
+            "Connections": [0,1],
+            "Weights": [0,0],
+            "RelativePositionX": 40,
+            "RelativePositionY": 40
         }
     ]
+
 }

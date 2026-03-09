@@ -1,9 +1,31 @@
 class Graph {
     // graph members:
     constructor(id, nodes){
-        this.ID = id,           // graph ID
-        this.Nodes = nodes      // graph nodes
+        this.ID = id | 0;          // graph ID
+        if (nodes == null){
+            this.Nodes = [];
+        }
+        else{
+            this.Nodes = nodes;
+        }
+        // graph nodes
     }
+
+    // extracts node data from json and stores in the nodes list
+    // expects Graph json object
+    populateGraphFromJSON(jsonobject){
+        this.ID = jsonobject.ID;
+        const nodeObjectData = jsonobject.Nodes;
+        for (let i = 0; i < nodeObjectData.length; i++){
+            const myNode = new Node(nodeObjectData[i].Value, nodeObjectData[i].Connections, nodeObjectData[i].Weights);
+            myNode.RelativePositionX = nodeObjectData[i].RelativePositionX;
+            myNode.RelativePositionY = nodeObjectData[i].RelativePositionY;
+            myNode.ID = i;
+            this.Nodes.push(myNode);
+        }
+        
+    }
+
     // adds a new node to the list
     // expects  value (any)
     //          connections (int list)
@@ -31,6 +53,19 @@ class Graph {
 
         //otherwise return true as node is in range
         return true;
+    }
+
+    // finds index of node object
+    // expects node object in node
+    // returns integer of node index in Nodes list
+    // if node not found, returns -1;
+    getIndexOfNode(node){
+        for (let i = 0; i < this.Nodes.length; i++){
+            if (this.Nodes[i].ID == node.ID){
+                return i;
+            }
+        }
+        return -1;
     }
 
     // prints all connections from a given node
@@ -86,6 +121,11 @@ class Graph {
             return []; // if invalid, return empty
         }
 
+        // otherswise find weight:
+        // extract nodes
+        let nodeA = this.Nodes[nodeIndexA];
+        let nodeB = this.Nodes[nodeIndexB];
+
         // check if nodes are connected
         if (!nodeA.connectionsContains(nodeIndexB)){
             return [];  // if not connected, return empty
@@ -94,11 +134,6 @@ class Graph {
         if (!nodeB.connectionsContains(nodeIndexA)){
             return [];  // if not connected, return empty
         }
-
-        // otherswise find weight:
-        // extract nodes
-        let nodeA = this.Nodes[nodeIndexA];
-        let nodeB = this.Nodes[nodeIndexB];
         
         // retrieve indexes to nodes' internal connections lists
         let nodeAindexToB = nodeA.getConnectionIndex(nodeIndexB);
@@ -106,7 +141,7 @@ class Graph {
 
         // retrieve nodes
         let nodeABweight = nodeA.Weights[nodeAindexToB];
-        let nodeBAweight = nodeB.weights[nodeBindexToA];
+        let nodeBAweight = nodeB.Weights[nodeBindexToA];
 
         // if weights are equal, return one only
         if (nodeABweight == nodeBAweight){
@@ -129,11 +164,13 @@ class Graph {
         let currentY = spacingY / 2;
         console.log(width);
         console.log(height);
+        console.log("(setup nodes for display) # of nodes: " + this.Nodes.length);
 
         // loop through nodes:
         for (let nodeIndex = 0; nodeIndex < this.Nodes.length; nodeIndex++){
             // extract current node:
             let currentNode = this.Nodes[nodeIndex];
+            console.log("(setup nodes for display) currentNode: " + currentNode.Value);
 
             // set current node relative display position
             currentNode.setRelativeDisplayPosition(currentX, currentY);
@@ -160,23 +197,50 @@ class Graph {
         }
     }
 
+    // searches a list for an array of items
+    // because referencing causes array.include() to always return false for lists
+    // expects a list to search in listToSearch
+    // expects an array to find in arrayToFind
+    // returns true if arrayToFound is in list
+    // returns false if not
+    searchList(listToSearch, arrayToFind){
+        for (let l = 0; l < listToSearch.length; l++){
+            const listItem = listToSearch[l];
+            let found = true;
+            for (let a = 0; a < arrayToFind.length; a++){
+                if (listItem[a] != arrayToFind[a]){
+                    found = false;
+                }
+            }
+            if (found){
+                return true;
+            }
+        }
+    }
+
     // displays the graph - nodes and edges in a canvas
     // expects canvasID string of html canvas to draw in
     //         nodeRadius int for visual radius of nodes
     //         fontName string for font to display node value
     //         fontSize int for font size in pixels for node value
+    //         fontColour string for font colour
+    //         fillColour string for colour to fill nodes with
+    //         scale float for scale to draw connections at
     // returns nothing, outputs visual graph in canvas of canvasID
-    displayGraph(canvasID, nodeRadius, fontName, fontSize, fillColour, fontColour){
+    displayGraph(canvasID, nodeRadius, fontName, fontSize, fillColour, fontColour, scale){
         const canvas = document.getElementById(canvasID);       // get canvas from ID
         const ctx = canvas.getContext("2d");                    // create context
         ctx.font = fontSize + "px " + fontName;                 // set up context font
+
+        const visitedWeights = [];
 
         // iterate through and draw edge connections
         for (let n = 0; n < this.Nodes.length; n++){
             // get current node from list, and calculate position:
             let currentNode = this.Nodes[n];
-            let currentNodeX = currentNode.RelativePositionX + (nodeRadius / 2);
-            let currentNodeY = currentNode.RelativePositionY + (nodeRadius / 2);     
+            console.log("(displaying) current node: " + currentNode.Value);
+            let currentNodeX = (currentNode.RelativePositionX + (nodeRadius / 2)) * scale;
+            let currentNodeY = (currentNode.RelativePositionY + (nodeRadius / 2)) * scale;     
            
             let currentNodeConnections = currentNode.Connections;   // get that node's list of connections
 
@@ -185,20 +249,49 @@ class Graph {
                 let currentConnection = currentNodeConnections[c];  // get individual connection
                 let connectedNode = this.Nodes[currentConnection];  // get node which is indexed from this connection
 
-                // get connected node position:
-                let connectedNodeX = connectedNode.RelativePositionX + (nodeRadius / 2);
-                let connectedNodeY = connectedNode.RelativePositionY + (nodeRadius / 2);
-
-                // begin drawing line stroke path
-                ctx.beginPath();
-                ctx.moveTo(currentNodeX, currentNodeY);     // move to start node X and Y
-                ctx.lineTo(connectedNodeX, connectedNodeY); // draw line to end X and Y
+                // seperating condition terms into two is easier to visualise:
+                const bs1 = this.searchList(visitedWeights, [currentNode.ID, connectedNode.ID]);
+                const bs2 = this.searchList(visitedWeights, [connectedNode.ID, currentNode.ID]);
+                const condition = !bs1 && !bs2;
                 
-                // draw path:
-                ctx.stroke();
+                if (condition){
+                    // get connected node position:
+                    let connectedNodeX = (connectedNode.RelativePositionX + (nodeRadius / 2)) * scale;
+                    let connectedNodeY = (connectedNode.RelativePositionY + (nodeRadius / 2)) * scale;
 
-                // end path
-                ctx.closePath();
+                    ctx.strokeStyle = "black";
+
+                    // begin drawing line stroke path
+                    ctx.beginPath();
+                    ctx.moveTo(currentNodeX, currentNodeY);     // move to start node X and Y
+                    ctx.lineTo(connectedNodeX, connectedNodeY); // draw line to end X and Y
+                    
+                    // draw path:
+                    ctx.stroke();
+
+                    // now draw weights in middle of line
+                    let weightText;
+                    let currentWeight = this.getWeightBetweenNodes(this.getIndexOfNode(currentNode), this.getIndexOfNode(connectedNode));
+                    weightText = currentNode.Value + "-" + connectedNode.Value + ": " + currentWeight[0]
+                    if (currentWeight.length == 2){
+                        weightText = weightText + "\n" + connectedNode.Value + "-" + currentNode.Value + ": " + currentWeight[1];
+                    }
+                    let halfX = currentNodeX + ((connectedNodeX - currentNodeX) / 2);
+                    let halfY = currentNodeY + ((connectedNodeY - currentNodeY) / 2);
+                    halfX = halfX - ((weightText.length * fontSize) / 4);
+
+                    ctx.strokeStyle = "white";
+                    ctx.lineWidth = (fontSize / 10) + 1;
+                    ctx.strokeText(weightText, halfX, halfY);
+                    ctx.lineWidth = 1;
+                    ctx.fillStyle = fontColour;
+                    ctx.fillText(weightText, halfX, halfY);
+
+                    // end path
+                    ctx.closePath();
+                }
+
+                visitedWeights.push([currentNode.ID, connectedNode.ID]);
             }
         }
 
@@ -207,12 +300,13 @@ class Graph {
             let currentNode = this.Nodes[n];    // get node from list
 
             // extract node attributes:
-            let nodeX = currentNode.RelativePositionX + (nodeRadius / 2);
-            let nodeY = currentNode.RelativePositionY + (nodeRadius / 2);
+            let nodeX = (currentNode.RelativePositionX + (nodeRadius / 2)) * scale;
+            let nodeY = (currentNode.RelativePositionY + (nodeRadius / 2)) * scale;
             let nodeV = currentNode.Value;
 
             // set fill colour
             ctx.fillStyle = fillColour;
+            ctx.strokeStyle = "black";
             // begin drawing node circles using paths
             ctx.beginPath();
             // X, Y, Radius, Start Angle, End Angle
@@ -228,6 +322,39 @@ class Graph {
             ctx.fillText(nodeV, nodeX - ((nodeV.length * fontSize) / 4), nodeY + (fontSize / 3));
         }
     }
+
+    // need to remove priority queue and just use normal stuff because this doesn't work.
+    djikstraTraverse(sourceNode){
+        let V = this.Nodes.length;
+        let Q = new PriorityQueue();
+
+        let distance = Array(V).fill(Number.MAX_SAFE_INTEGER);
+        let previous = Array(V).fill(null);
+
+        distance[this.getIndexOfNode(sourceNode)] = 0;
+        Q.enqueue([0, sourceNode]);
+
+        // while Q not empty
+        while (!Q.isEmpty()){
+            //let [dist, nodeU] = Q.dequeue(); 
+            
+            if (dist > distance[this.getIndexOfNode(nodeU)]) continue;
+
+            for (let i = 0; i < nodeU.Connections.length; i++){
+                let nodeV = this.Nodes[nodeU.Connections[i]];
+                let weightW = this.Nodes[nodeU.Weights[i]];
+
+                if (distance[this.getIndexOfNode(nodeU)] + weightW < distance[this.getIndexOfNode(nodeV)]){
+                    distance[this.getIndexOfNode(nodeV)] = distance[this.getIndexOfNode(nodeU)] + weightW;
+                    previous[this.getIndexOfNode(nodeV)] = this.getIndexOfNode(nodeU);
+                    Q.enqueue([distance[this.getIndexOfNode(nodeV)], nodeV]);
+                }
+            }
+        }
+
+        return [distance, previous];
+    }
+    
 };
 
 class Node {
@@ -237,10 +364,13 @@ class Node {
     // weights: list of integers
     // relativepositionx: float storing X where the node could be displayed on a page
     // relativepositiony: float storing Y where the node could be displayed on a page
-    constructor(value, connections, weights){
+    constructor(value, connections, weights, id){
         this.Value = value,
         this.Connections = connections,
         this.Weights = weights
+        this.RelativePositionX = 0;
+        this.RelativePositionY = 0;
+        this.ID = id;
     }
 
     // sets the node's relative position data
@@ -281,22 +411,112 @@ class Node {
         return false;
     }
 };
-const foundCanvas = document.getElementById("mapCanvas");
-let myGraph;
 
-// node value, connections, weights
-// myGraph.addNode("abc", [1], [0]);
-// myGraph.addNode("def", [0], [0]);
-// myGraph.addNode("ghi", [1], [0]);
-// myGraph.addNode("jkl", [1], [0]);
-// myGraph.addNode("mno", [0], [0]);
-// myGraph.addNode("pqr", [1], [0]);
-// myGraph.addNode("stu", [0, 1], [0, 0]);
+// sketchy priority queue class which may have problems
+class PriorityQueue {
+    // stores elements and priorities
+    constructor(){
+        this.Items = [];
+    }
 
-// myGraph.printConnections(-1);
-// myGraph.printConnections(0);
-// myGraph.printConnections(1);
-// myGraph.printConnections(2);
+    // add to priority queue
+    enqueue(element, priority){
+        let qElement = new PriorityQueueElement(element, priority);
+        let contain = false;
 
-//myGraph.setupNodesForDisplay(60, 60, foundCanvas.width, foundCanvas.height);
-//myGraph.displayGraph(foundCanvas.id, 20, "Monospace", 20, "white", "black");
+        // iterate through each item in queue and check priority
+        for (let i = 0; i < this.Items.length; i++){
+            if (this.Items[i].Priority > qElement.Priority){
+                // if item exists, set contain to true and insert to queue
+                this.Items.splice(i, 0, qElement);
+                contain = true;
+                break;
+            }
+        }
+
+        // if not already contained, add on end.
+        if (!contain){
+            this.Items.push(qElement);
+        }
+    }
+
+    // remove from priority queue
+    dequeue(){
+        if (this.isEmpty()){
+            throw new Error("Priority Queue Underflow");
+            return;
+        }
+        return this.Items.shift();
+    }
+
+    // returns item from front of queue
+    front(){
+        if (this.isEmpty())
+            return "No elements";
+        return this.Items[0];
+    }
+
+    // returns items from rear of queue
+    rear(){
+        if (this.isEmpty())
+            return "No elements";
+        return this.items[this.items.length - 1];
+    }
+
+    isEmpty(){
+        return this.Items.length == 0;
+    }
+
+    printPriorityQueue(){
+        let str = "";
+        for (let i = 0; i < this.items.length; i++)
+            str += this.items[i].element + " ";
+        return str;
+    }
+}
+
+class PriorityQueueElement{
+    // stores element and priority.
+    // for use with priority queue
+    constructor(element, priority){
+        this.Element = element;
+        this.Priority = priority;
+    }
+}
+
+
+async function gatherGraphData(url){
+    try{
+        const response = await fetch(url);
+        if (!response.ok){
+            throw new Error("(gather graph data) HTTP error! Status: ${response.status}");
+        }
+
+        const data = await response.json();
+
+        console.log("(gather graph data) json data: ", data);
+        const jsonob = JSON.parse(JSON.stringify(data));
+        return jsonob;
+    }
+    catch (error){
+        console.error("(gather graph data) Error fetching / parsing JSON:", error);
+    }
+}
+
+
+async function main() {
+    const foundCanvas = document.getElementById("mapCanvas");
+
+    const url = "https://he25890161.github.io/A3_4-Map-Project/graphData.json";
+
+    const myGraph = new Graph(); 
+    const dat = await gatherGraphData(url);
+    myGraph.populateGraphFromJSON(dat);
+
+    console.log("(main) graph:", myGraph);
+    myGraph.displayGraph(foundCanvas.id, 10, "Monospace", 20, "white", "black", 6);
+
+    console.log("result:", myGraph.djikstraTraverse(myGraph.Nodes[0]));
+}
+
+window.onload = main();

@@ -324,30 +324,53 @@ class Graph {
     }
 
     // need to remove priority queue and just use normal stuff because this doesn't work.
-    djikstraTraverse(sourceNode){
+    djikstraTraverse(sourceNodeIndex){
         let V = this.Nodes.length;
-        let Q = new PriorityQueue();
 
-        let distance = Array(V).fill(Number.MAX_SAFE_INTEGER);
-        let previous = Array(V).fill(null);
+        let distance = new Array(V);
+        let previous = new Array(V);
+        let Q = [];
 
-        distance[this.getIndexOfNode(sourceNode)] = 0;
-        Q.enqueue([0, sourceNode]);
+        // INITIALIZE
+        for (let n = 0; n < V; n++){
+            distance[n] = Number.MAX_SAFE_INTEGER;
+            previous[n] = undefined;
+            Q.push(n);
+        }
 
-        // while Q not empty
-        while (!Q.isEmpty()){
-            //let [dist, nodeU] = Q.dequeue(); 
-            
-            if (dist > distance[this.getIndexOfNode(nodeU)]) continue;
+        // Correctly set source distance
+        distance[sourceNodeIndex] = 0;
 
-            for (let i = 0; i < nodeU.Connections.length; i++){
-                let nodeV = this.Nodes[nodeU.Connections[i]];
-                let weightW = this.Nodes[nodeU.Weights[i]];
+        // MAIN LOOP
+        while (Q.length > 0){
 
-                if (distance[this.getIndexOfNode(nodeU)] + weightW < distance[this.getIndexOfNode(nodeV)]){
-                    distance[this.getIndexOfNode(nodeV)] = distance[this.getIndexOfNode(nodeU)] + weightW;
-                    previous[this.getIndexOfNode(nodeV)] = this.getIndexOfNode(nodeU);
-                    Q.enqueue([distance[this.getIndexOfNode(nodeV)], nodeV]);
+            // Find node in Q with smallest distance
+            let u = Q[0];
+            let smallestDist = distance[u];
+            let indexToRemove = 0;
+
+            for (let i = 1; i < Q.length; i++){
+                let nodeIndex = Q[i];
+                if (distance[nodeIndex] < smallestDist){
+                    smallestDist = distance[nodeIndex];
+                    u = nodeIndex;
+                    indexToRemove = i;
+                }
+            }
+
+            // Remove u from Q
+            Q.splice(indexToRemove, 1);
+
+            // Relax edges
+            const conns = this.getConnections(u);
+            for (let vc = 0; vc < conns.length; vc++){
+                let v = conns[vc];
+                let weight = this.getWeightBetweenNodes(u, v)[0];
+                let alt = distance[u] + weight;
+
+                if (alt < distance[v]){
+                    distance[v] = alt;
+                    previous[v] = u;
                 }
             }
         }
@@ -355,7 +378,7 @@ class Graph {
         return [distance, previous];
     }
     
-};
+}
 
 class Node {
     // node has these members:
@@ -410,81 +433,35 @@ class Node {
         }
         return false;
     }
-};
-
-// sketchy priority queue class which may have problems
-class PriorityQueue {
-    // stores elements and priorities
-    constructor(){
-        this.Items = [];
-    }
-
-    // add to priority queue
-    enqueue(element, priority){
-        let qElement = new PriorityQueueElement(element, priority);
-        let contain = false;
-
-        // iterate through each item in queue and check priority
-        for (let i = 0; i < this.Items.length; i++){
-            if (this.Items[i].Priority > qElement.Priority){
-                // if item exists, set contain to true and insert to queue
-                this.Items.splice(i, 0, qElement);
-                contain = true;
-                break;
-            }
-        }
-
-        // if not already contained, add on end.
-        if (!contain){
-            this.Items.push(qElement);
-        }
-    }
-
-    // remove from priority queue
-    dequeue(){
-        if (this.isEmpty()){
-            throw new Error("Priority Queue Underflow");
-            return;
-        }
-        return this.Items.shift();
-    }
-
-    // returns item from front of queue
-    front(){
-        if (this.isEmpty())
-            return "No elements";
-        return this.Items[0];
-    }
-
-    // returns items from rear of queue
-    rear(){
-        if (this.isEmpty())
-            return "No elements";
-        return this.items[this.items.length - 1];
-    }
-
-    isEmpty(){
-        return this.Items.length == 0;
-    }
-
-    printPriorityQueue(){
-        let str = "";
-        for (let i = 0; i < this.items.length; i++)
-            str += this.items[i].element + " ";
-        return str;
-    }
 }
 
-class PriorityQueueElement{
-    // stores element and priority.
-    // for use with priority queue
-    constructor(element, priority){
-        this.Element = element;
-        this.Priority = priority;
+// gets a path to a node using output arrays from djikstra traversal
+// expects previous array and a goal node index in goalIndex
+// returns a list of nodes to traverse
+function getPath(previous, goalIndex) {
+    let path = [];
+    let current = goalIndex;
+
+    while (current !== undefined) {
+        path.push(current);
+        current = previous[current];
     }
+
+    return path.reverse();
 }
 
+// wrapper function for finding a path with the djikstra algorithm.
+// expects populated Grap object in graph,
+//         index of start node in startNodeIndex
+//         index of goal node in goalNodeIndex
+function findRoute(graph, startNodeIndex, goalNodeIndex){
+    let [distance, previous] = graph.djikstraTraverse(startNodeIndex);
+    let path = getPath(previous, goalNodeIndex);
+    return { path, cost: distance[goalNodeIndex] };
+}
 
+// loads graph data from given url once data has been loaded.
+// async allows clean loading and causes other code to wait until correct data retrieved.
 async function gatherGraphData(url){
     try{
         const response = await fetch(url);
@@ -503,7 +480,7 @@ async function gatherGraphData(url){
     }
 }
 
-
+// main program
 async function main() {
     const foundCanvas = document.getElementById("mapCanvas");
 
@@ -516,7 +493,7 @@ async function main() {
     console.log("(main) graph:", myGraph);
     myGraph.displayGraph(foundCanvas.id, 10, "Monospace", 20, "white", "black", 6);
 
-    console.log("result:", myGraph.djikstraTraverse(myGraph.Nodes[0]));
+    console.log("thingy:", findRoute(myGraph, 0, 3));
 }
 
 window.onload = main();

@@ -1,0 +1,150 @@
+html{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body{
+    margin: 0px;
+    padding:0px;
+}
+
+h1{
+    padding-left: 20px;
+}
+
+h4{
+    padding: 0px;
+    padding-bottom: 10px;
+    text-align: center;
+    margin:0px;
+}
+
+p{
+    text-align: center;
+    color:#b7b7b7
+}
+
+#nav-bar{
+    background-color: #0075aa;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    padding: 10px;
+}
+
+
+#main-container{
+    display: flex;
+    flex-direction: row;
+    margin:5px;
+    justify-content: space-evenly;
+    align-items: flex-start;
+}
+
+
+#main-container h2{
+    margin:0px;
+    padding:10px
+}
+
+#left-bar, #right-bar{
+    background-color: #ffd100;
+    border-radius: 10px;
+    border:1px solid black;
+    min-width: 40%;
+    margin: 5px;
+}
+
+#nav-title{
+    margin: 0px 10px 0px 10px;
+    font-weight: 600;
+    color:white
+}
+#logo{
+    background-color: #b7b7b7;
+    padding:10px;
+    border-radius: 10px;
+    font-weight: 600;
+    align-content: center;
+}
+#logo:hover{
+    background-color: rgb(228, 228, 228);
+    transform: scale(1.03);
+    cursor: pointer;
+}
+
+.select-box{
+    background-color: white;
+    border-radius: 0px 0px 10px 10px;
+    padding: 10px;
+    text-align: center;
+}
+
+.select-label{
+    margin:0px;
+}
+.select-label:hover{
+    background-color: #dadada;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+.selectors{
+    visibility: collapse;
+}
+
+table{
+    width:100%;
+}
+
+table tr{
+    display: flex;
+    flex-direction: column;
+}
+table th{
+    background-color: rgb(213, 213, 213);
+    padding:10px;
+}
+table td{
+    padding:5px;
+    border-top:1px solid black;
+}
+table td:hover{
+    background-color: rgb(182, 182, 231);
+    cursor: pointer;
+}
+
+#bottom-bar{
+    background-color: black;
+    color: white;
+    bottom: 0px;
+    position: fixed;
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    font-weight: 600;
+}
+
+#go-box{
+    visibility: hidden;
+    display:flex;
+    justify-content: center;
+}
+#go-button{
+    
+    color:white;
+    background-color: #0075aa;
+    border-radius: 10px;
+    font-weight: 600;
+    border:1px solid black;
+    font-size: larger;
+}
+
+#mapCanvas{
+    border:1px solid black;
+    min-width: 70%;
+}
+
+@media (max-width: 400px){
+    #main-container {flex-direction: column; }
+} 

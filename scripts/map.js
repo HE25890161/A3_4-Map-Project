@@ -1,3 +1,4 @@
+
 class Graph {
     // graph members:
     constructor(id, nodes){
@@ -323,7 +324,9 @@ class Graph {
         }
     }
 
-    // need to remove priority queue and just use normal stuff because this doesn't work.
+    // uses djikstra's algorithm to find all shortest paths from a start node
+    // expects index of source node in sourceNodeIndex.
+    // returns two arrays: one of shortest distances to nodes, one of the previous nodes
     djikstraTraverse(sourceNodeIndex){
         let V = this.Nodes.length;
 
@@ -460,6 +463,30 @@ function findRoute(graph, startNodeIndex, goalNodeIndex){
     return { path, cost: distance[goalNodeIndex] };
 }
 
+// gets a parameter from the url.
+// expects name of parameter to return string
+// returns a parameter value.
+function getURLParam(paramName){
+    try{
+        // get the parameters from search bar
+        const givenParams = window.location.search;
+
+        // turn into urlsearchparams object
+        const params = new URLSearchParams(givenParams);
+
+        // get the parameter from given value
+        const value = params.get(paramName);
+
+        // return null if it doesn't exist.
+        return value !== null ? value : null;
+    } catch (error){
+        // display error if failed to get parameter
+        console.error("Error reading URL parameter:", error);
+        return null;
+    }
+}
+
+
 // loads graph data from given url once data has been loaded.
 // async allows clean loading and causes other code to wait until correct data retrieved.
 async function gatherGraphData(url){
@@ -480,20 +507,31 @@ async function gatherGraphData(url){
     }
 }
 
+
+window.addEventListener("load", () => main() );
 // main program
 async function main() {
     const foundCanvas = document.getElementById("mapCanvas");
 
-    const url = "https://he25890161.github.io/A3_4-Map-Project/graphData.json";
+    if (window.location.search != ""){
+        let building = getURLParam("building");
 
-    const myGraph = new Graph(); 
-    const dat = await gatherGraphData(url);
-    myGraph.populateGraphFromJSON(dat);
+        // use regex to select all spaces, and replace with encoded %20
+        building = building.replace(/ /g, "%20");
 
-    console.log("(main) graph:", myGraph);
-    myGraph.displayGraph(foundCanvas.id, 10, "Monospace", 20, "white", "black", 6);
+        let floor = getURLParam("floor");
+        console.log(building);
+        console.log(floor);
 
-    console.log("thingy:", findRoute(myGraph, 0, 3));
+        let imageURL = "https://he25890161.github.io/A3_4-Map-Project/map%20images/" + building + "/" + floor + "-Access.png";
+
+        let graphDataURL = "https://he25890161.github.io/A3_4-Map-Project/building%20map%20data/" + building + "/" + floor + ".json";
+
+        foundCanvas.src = imageURL;
+    }
+    else{
+        // redirect to 404 error page or something
+        window.location.href = "../pages/error.html" // add error page path;
+    }
 }
 
-window.onload = main();

@@ -130,8 +130,7 @@ table td:hover{
     display:flex;
     justify-content: center;
 }
-#go-button{
-    
+#go-button, #pathfind-button{
     color:white;
     background-color: #0075aa;
     border-radius: 10px;
@@ -139,12 +138,45 @@ table td:hover{
     border:1px solid black;
     font-size: larger;
 }
+#go-button:hover, #pathfind-button:hover{
+    background-color: #019ae1;
+    transform: scale(1.03);
+}
 
 #mapCanvas{
+    margin:10px;
     border:1px solid black;
     min-width: 70%;
 }
 
-@media (max-width: 400px){
+.select-div{
+    margin: 10px;
+    border: 2px solid grey;
+    border-radius: 10px;
+    padding:10px
+}
+select{
+    border: 1px solid black;
+    border-radius: 10px;
+}
+option{
+    text-align: center;
+}
+
+#sub-container{
+    display:flex;
+    flex-direction: row;
+}
+
+#path-div{
+    margin:10px;
+}
+
+@media (max-width: 650px){
     #main-container {flex-direction: column; }
+    
 } 
+
+@media (min-width:600px){
+    #sub-container {flex-direction: column; }
+}

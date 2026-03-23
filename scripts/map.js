@@ -369,6 +369,10 @@ class Graph {
             for (let vc = 0; vc < conns.length; vc++){
                 let v = conns[vc];
                 let weight = this.getWeightBetweenNodes(u, v)[0];
+                if (weight == null){
+                    console.error("null you prick");
+                }
+
                 let alt = distance[u] + weight;
 
                 if (alt < distance[v]){
@@ -493,7 +497,8 @@ async function gatherGraphData(url){
     try{
         const response = await fetch(url);
         if (!response.ok){
-            throw new Error("(gather graph data) HTTP error! Status: ${response.status}");
+            console.error("(gather graph data) HTTP error! Status: ${response.status}");
+            return null;
         }
 
         const data = await response.json();
@@ -504,6 +509,7 @@ async function gatherGraphData(url){
     }
     catch (error){
         console.error("(gather graph data) Error fetching / parsing JSON:", error);
+        return null;
     }
 }
 
@@ -511,7 +517,12 @@ async function gatherGraphData(url){
 window.addEventListener("load", () => main() );
 // main program
 async function main() {
+    document.getElementById("error-box").style.display = "none";
+    const myGraph = new Graph();
     const foundCanvas = document.getElementById("mapCanvas");
+
+    let startNodeIndex = 0;
+    let goalNodeIndex = 0;
 
     if (window.location.search != ""){
         let building = getURLParam("building");
@@ -524,14 +535,76 @@ async function main() {
         console.log(floor);
 
         let imageURL = "https://he25890161.github.io/A3_4-Map-Project/map%20images/" + building + "/" + floor + "-Access.png";
+        foundCanvas.src = imageURL;
 
         let graphDataURL = "https://he25890161.github.io/A3_4-Map-Project/building%20map%20data/" + building + "/" + floor + ".json";
+        console.log(graphDataURL);
 
-        foundCanvas.src = imageURL;
+        let jsonobject = await gatherGraphData(graphDataURL);
+        if (jsonobject == null){
+            document.getElementById("error-box").style.display = "block";
+            document.getElementById("title-bar").style.display = "none";
+            document.getElementById("start-input").style.display = "none";
+            document.getElementById("goal-input").style.display = "none";
+            document.getElementById("pathfind-button").style.display = "none";
+        }
+        else{
+            myGraph.populateGraphFromJSON(jsonobject);
+
+            const startList = document.getElementById("start-list");
+            const goalList = document.getElementById("goal-list");
+            const sorted = Array.from(myGraph.Nodes).sort((a, b) => {
+                const valA = (a?.["Value"] ?? "").toString().toLowerCase();
+                const valB = (b?.["Value"] ?? "").toString().toLowerCase();
+                return valA.localeCompare(valB, "en", {sensitivity: "base"});
+            });
+            startNodeIndex = myGraph.getIndexOfNode(sorted[0]);
+            goalNodeIndex = myGraph.getIndexOfNode(sorted[0]);
+            for (let i = 0; i < sorted.length; i++){
+                const node = sorted[i];
+                const goalopt = document.createElement("option");
+                goalopt.textContent = node.Value;
+                goalopt.class = "goal-option";
+                goalopt.value = node.ID;
+
+                const startopt = document.createElement("option");
+                startopt.textContent = node.Value;
+                startopt.class = "start-option";
+                startopt.value = node.ID;
+
+                startList.appendChild(startopt);
+                goalList.appendChild(goalopt);
+            }
+
+            startList.addEventListener("change", (event) => {
+                const n = myGraph.Nodes.find(no => no.ID == event.target.value);
+                startNodeIndex = myGraph.getIndexOfNode(n);
+            });
+
+            goalList.addEventListener("change", (event) =>{
+                const n = myGraph.Nodes.find(no => no.ID == event.target.value);
+                goalNodeIndex = myGraph.getIndexOfNode(n);
+            });
+        }
+        
     }
     else{
         // redirect to 404 error page or something
         window.location.href = "../pages/error.html" // add error page path;
     }
+
+    document.getElementById("pathfind-button").addEventListener("click", () => {
+        const path = findRoute(myGraph, startNodeIndex, goalNodeIndex).path;
+        console.log(path);
+        let pathbullets = document.getElementById("path-list");
+        pathbullets.replaceChildren();
+        pathbullets.id = "path-list";
+        for (let i = 0; i < path.length; i++){
+            const point = document.createElement("li");
+            point.textContent = myGraph.Nodes[path[i]].Value;
+
+            pathbullets.appendChild(point);
+        }
+    });
 }
 

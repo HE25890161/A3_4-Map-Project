@@ -1,12 +1,12 @@
 window.onload = () => {
     const indexMapLookup = [
         "Dalton Building",
-        "Geoffrey Manton Building",
+        "Business School",
         "Brooks Building"
     ];
     const floorLookup = [
         ["DB-00", "DB-01", "DB-02", "DB-03", "DB-04", "DB-05", "DB-06", "DB-07"],
-        ["MAN-B3", "MAN-B1", "MAN-00", "MAN-01", "MAN-02", "MAN-03", "MAN-04"],
+        ["BS-00", "BS-01", "BS-02", "BS-03", "BS-04", "BS-05", "BS-06", "BS-07"],
         ["BR-00", "BR-01", "BR-02", "BR-03", "BR-04"]
     ];
 

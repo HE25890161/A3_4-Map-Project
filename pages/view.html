@@ -15,7 +15,33 @@
             <div id="nav-title">
                 <h2>View</h2>
             </div>
-        </div>            
-        <img width="40%" height="40%" id="mapCanvas"></img>
+        </div>     
+        <h1 id="error-box">Unfortunately, no map data is available for this map.</h1>
+        <h1 id="title-bar">View Map</h1>
+        <div id="main-container">
+            <img width="40%" height="40%" id="mapCanvas"></img>
+            <div id="sub-container">
+                <div id="start-input" class="select-div">
+                    <h2>Select Start Location:</h2>
+                    <select id="start-list">
+                        
+                    </select>
+                </div>
+                <div id="goal-input" class="select-div">
+                    <h2>Select Destination:</h2>
+                    <select id="goal-list">
+                        
+                    </select>
+                </div>
+                <button id="pathfind-button">Get Path</button>
+            </div>
+        </div>
+        <div id="path-div">
+            <h2>Directions</h2>
+            <ul id="path-list">
+
+            </ul>
+        </div>
+        <p>Created for Team Project</p>       
     </body>
 </html>

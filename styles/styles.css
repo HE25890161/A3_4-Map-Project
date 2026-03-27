@@ -66,8 +66,8 @@ p{
     border-radius: 10px;
     font-weight: 600;
     align-content: center;
-    height: 10%;
-    width: 10%;
+    height: 5%;
+    width: 5%;
 }
 #logo:hover{
     background-color: rgb(228, 228, 228);

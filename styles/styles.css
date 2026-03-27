@@ -66,11 +66,17 @@ p{
     border-radius: 10px;
     font-weight: 600;
     align-content: center;
+    height: 10%;
+    width: 10%;
 }
 #logo:hover{
     background-color: rgb(228, 228, 228);
     transform: scale(1.03);
     cursor: pointer;
+}
+
+#logoimg{
+    width: stretch;
 }
 
 .select-box{

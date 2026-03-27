@@ -517,6 +517,10 @@ async function gatherGraphData(url){
 window.addEventListener("load", () => main() );
 // main program
 async function main() {
+    document.getElementById("logo").addEventListener("click", () =>{
+        window.location.replace("../pages/home.html");
+    });
+    
     document.getElementById("error-box").style.display = "none";
     const myGraph = new Graph();
     const foundCanvas = document.getElementById("mapCanvas");

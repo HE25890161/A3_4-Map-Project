@@ -19,7 +19,7 @@ window.onload = () => {
     let ready = false;
 
     document.getElementById("logo").addEventListener("click", () =>{
-        window.location.replace("home.html");
+        window.location.replace("../pages/home.html");
     });
 
     document.getElementById("map-box").addEventListener("click", () =>{
